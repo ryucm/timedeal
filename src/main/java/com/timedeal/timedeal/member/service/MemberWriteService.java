@@ -13,7 +13,7 @@ public class MemberWriteService {
 
     private final MemberRepository memberRepository;
 
-    public ResponseEntity<?> SignUp(SignUpRequestDto signUpRequestDto) {
+    public ResponseEntity<?> signUp(SignUpRequestDto signUpRequestDto) {
         if (memberRepository.existsByMemberId(signUpRequestDto.getMemberId())) {
             return ResponseEntity.fail("이미 존재하는 회원 ID입니다.");
         }
