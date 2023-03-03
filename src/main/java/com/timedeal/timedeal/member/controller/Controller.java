@@ -18,13 +18,20 @@ public class Controller {
     private final MemberReadService memberReadService;
 
     @PostMapping("")
-    public ResponseEntity<?> signUp(SignUpRequestDto sign) {
-        log.info("memberId = " + sign.getMemberId());
-        return memberWriteService.signUp(sign);
+    public ResponseEntity<?> signUp(SignUpRequestDto signUpRequestDto) {
+        log.info("회원 정보 저장: memberId = " + signUpRequestDto.getMemberId());
+        return memberWriteService.signUp(signUpRequestDto);
     }
 
     @GetMapping("")
     public ResponseEntity<?> getMember(@RequestParam String memberId) {
+        log.info("회원 정보 조회: memberId = " + memberId);
         return memberReadService.getMember(memberId);
+    }
+
+    @DeleteMapping("")
+    public ResponseEntity<?> deleteMember(@RequestParam String memberId) {
+        log.info("회원 정보 삭제: memberId = " + memberId);
+        return memberWriteService.deleteMember(memberId);
     }
 }
