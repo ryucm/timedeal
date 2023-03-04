@@ -64,6 +64,10 @@ public class MemberService {
         }
 
         Optional<Member> member = memberRepository.findByMemberId(loginRequestDto.getMemberId());
+
+        if (member.get().getPassword() != loginRequestDto.getPassword()) {
+            return ResponseEntity.fail("비밀번호를 틀렸습니다.");
+        }
         // 로그인 성공 처리
         // 세션이 있으면 있는 세션 반환, 없으면 신규 세션 생성
         HttpSession session = request.getSession();
