@@ -26,5 +26,5 @@ public class Member {
     Role role;
 
     @OneToMany(fetch = FetchType.LAZY)
-    List<Item> itemList = new ArrayList<>();
+    final List<Item> itemList = new ArrayList<>();
 }
