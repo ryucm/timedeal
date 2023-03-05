@@ -10,7 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 import java.util.Optional;
@@ -32,8 +34,8 @@ public class MemberService {
                 .password(signUpRequestDto.getPassword())
                 .role(signUpRequestDto.getRole())
                 .build();
-        memberRepository.save(member);
-        log.info(String.format("회원 등록 완료: memberId = %s", signUpRequestDto.getMemberId()));
+        Member savedMember = memberRepository.save(member);
+        log.info(String.format("회원 등록 완료: memberId = %s", savedMember.getMemberId()));
         return ResponseEntity.success(member,"success");
     }
 
@@ -58,21 +60,30 @@ public class MemberService {
         }
     }
 
-    public ResponseEntity<?> login(HttpServletRequest request, LoginRequestDto loginRequestDto) {
+    public ResponseEntity<?> login(
+            HttpServletRequest request,
+            LoginRequestDto loginRequestDto,
+            HttpServletResponse response) {
         if (!validatorMember(loginRequestDto.getMemberId())) {
             return ResponseEntity.fail("회원 정보가 없습니다.");
         }
 
         Optional<Member> member = memberRepository.findByMemberId(loginRequestDto.getMemberId());
-
-        if (member.get().getPassword() != loginRequestDto.getPassword()) {
+        if (!member.get().getPassword().equals(loginRequestDto.getPassword())) {
+            log.info(String.format("회원 비밀번호 : %s, 요청 비밀번호 : %s", member.get().getPassword(), loginRequestDto.getPassword()));
             return ResponseEntity.fail("비밀번호를 틀렸습니다.");
         }
+
+
         // 로그인 성공 처리
         // 세션이 있으면 있는 세션 반환, 없으면 신규 세션 생성
         HttpSession session = request.getSession();
+        MemberResponseDto memberResponseDto = new MemberResponseDto(member);
         // 세션에 로그인 회원 정보 보관
-        session.setAttribute("LOGIN_MEMBER", new MemberResponseDto(member));
+        session.setAttribute("LOGIN_MEMBER", memberResponseDto);
+        Cookie cookie = new Cookie("memberId", memberResponseDto.getMemberId());
+        response.addCookie(cookie);
+
         log.info(String.format("로그인 정보 확인 : memberId = %s", member.get().getMemberId()));
         return ResponseEntity.success("로그인 성공");
     }

@@ -14,42 +14,48 @@ import javax.servlet.http.HttpSession;
 
 @Slf4j
 @RestController
-@RequestMapping("")
+@RequestMapping("/member")
 @RequiredArgsConstructor
-public class Controller {
+public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/member")
+    @PostMapping("")
     public ResponseEntity<?> signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
-        log.info("회원 정보 저장: memberId = " + signUpRequestDto.getMemberId());
+        log.info(String.format("회원 등록 : memberId = %s",signUpRequestDto.getMemberId()));
         return memberService.signUp(signUpRequestDto);
     }
 
-    @GetMapping("/member")
+    @GetMapping("")
     public ResponseEntity<?> getMember(@RequestParam String memberId) {
-        log.info("회원 정보 조회: memberId = " + memberId);
+        log.info(String.format("회원 조회: memberId = %s", memberId));
         return memberService.getMember(memberId);
     }
 
-    @DeleteMapping("/member")
+    @DeleteMapping("")
     public ResponseEntity<?> deleteMember(@RequestParam String memberId) {
-        log.info("회원 정보 삭제: memberId = " + memberId);
+        log.info(String.format("회원 탈퇴: memberId = %s", memberId));
         return memberService.deleteMember(memberId);
     }
 
-    @PostMapping("login")
-    public ResponseEntity<?> login(HttpServletRequest request, @RequestBody LoginRequestDto loginRequestDto) {
-        return memberService.login(request, loginRequestDto);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
+            HttpServletRequest request,
+            @RequestBody LoginRequestDto loginRequestDto,
+            HttpServletResponse response
+    ) {
+        log.info(String.format("로그인 시도 : memberId = %s", loginRequestDto.getMemberId()));
+        return memberService.login(request, loginRequestDto, response);
     }
 
-    @PostMapping("logout")
+    @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
         if (session != null) {
             session.invalidate();
         }
+        log.info(String.format("로그아웃"));
         return ResponseEntity.success("로그아웃 되었습니다.");
     }
 }
