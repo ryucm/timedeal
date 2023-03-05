@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -79,9 +80,12 @@ public class MemberService {
         // 세션이 있으면 있는 세션 반환, 없으면 신규 세션 생성
         HttpSession session = request.getSession();
         MemberResponseDto memberResponseDto = new MemberResponseDto(member);
+        String uuid = UUID.randomUUID().toString();
         // 세션에 로그인 회원 정보 보관
-        session.setAttribute("LOGIN_MEMBER", memberResponseDto);
-        Cookie cookie = new Cookie("memberId", memberResponseDto.getMemberId());
+        session.setAttribute(uuid, memberResponseDto);
+
+        // 쿠키에 저장
+        Cookie cookie = new Cookie("uuid", uuid);
         response.addCookie(cookie);
 
         log.info(String.format("로그인 정보 확인 : memberId = %s", member.get().getMemberId()));
