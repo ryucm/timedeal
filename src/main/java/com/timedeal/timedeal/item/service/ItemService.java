@@ -25,17 +25,14 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final MemberRepository memberRepository;
 
-    public ResponseEntity<?> createItem(ItemDto itemDto, HttpServletRequest request, Cookie cookie) {
+    public ResponseEntity<?> createItem(
+            ItemDto itemDto,
+            HttpServletRequest request,
+            Cookie cookie) {
+        checkLogin(cookie);
+
         HttpSession session = request.getSession(false);
-        if (cookie == null) {
-            return ResponseEntity.fail("로그인이 필요합니다.");
-        }
-        MemberResponseDto findMember = (MemberResponseDto) session.getAttribute(cookie.getValue());
-        Optional<Member> member = memberRepository.findByMemberId(findMember.getMemberId());
-        if (member.get().getRole() == Role.USER) {
-            log.info(String.format("상품 등록: 회원 권한 = %s", member.get().getRole()));
-            return ResponseEntity.fail("상품 등록 권한이 없습니다.");
-        }
+        Optional<Member> member = loginMember(session, cookie);
 
         Item newItem = Item.builder()
                 .itemName(itemDto.getItemName())
@@ -43,13 +40,27 @@ public class ItemService {
                 .stock(itemDto.getStock())
                 .member(member.get())
                 .build();
+
         Item savedItem = itemRepository.save(newItem);
         log.info(String.format("상품 등록 완료: Item Name = %s", savedItem.getItemName()));
         return ResponseEntity.success(savedItem, "상품 등록 완료");
     }
 
-    public ResponseEntity<?> deleteItem(Long id) {
-        return ResponseEntity.success("성공");
+    public ResponseEntity<?> deleteItem(
+            Long id,
+            HttpServletRequest request,
+            Cookie cookie) {
+        checkLogin(cookie);
+
+        HttpSession session = request.getSession(false);
+        Optional<Member> member = loginMember(session, cookie);
+        Optional<Item> item = itemRepository.findById(id);
+
+        if (!member.get().getMemberId().equals(item.get().getMember().getMemberId())) {
+            return ResponseEntity.fail("상품 권한이 없습니다.");
+        }
+        itemRepository.deleteById(id);
+        return ResponseEntity.success("삭제하였습니다.");
     }
 
     public ResponseEntity<?> getItems() {
@@ -60,15 +71,29 @@ public class ItemService {
         return ResponseEntity.success("성공");
     }
 
-    public ResponseEntity<?> updateItem(ItemDto itemDto, HttpServletRequest request) {
+    public ResponseEntity<?> updateItem(ItemDto itemDto, HttpServletRequest request, Cookie cookie) {
+        checkLogin(cookie);
+
+        HttpSession session = request.getSession(false);
+        Optional<Member> member = loginMember(session, cookie);
         return ResponseEntity.success("성공");
     }
 
-    private boolean checkLogin(HttpSession session) {
-        if (session == null) {
-            log.info("상품 등록: 로그인이 필요합니다.");
-            return true;
+    private void checkLogin(Cookie cookie) {
+        if (cookie == null) {
+            log.info(String.format("로그인이 필요합니다."));
+            throw  new IllegalArgumentException();
         }
-        return false;
+    }
+
+    private Optional<Member> loginMember(HttpSession session, Cookie cookie) {
+        MemberResponseDto findMember = (MemberResponseDto) session.getAttribute(cookie.getValue());
+        Optional<Member> member = memberRepository.findByMemberId(findMember.getMemberId());
+
+        if (member.get().getRole() == Role.USER) {
+            log.info(String.format("상품 권한이 없습니다. 회원 권한 = %s", member.get().getRole()));
+            throw  new IllegalArgumentException();
+        }
+        return member;
     }
 }

@@ -15,7 +15,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 public class Item {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String itemName;
     int price;

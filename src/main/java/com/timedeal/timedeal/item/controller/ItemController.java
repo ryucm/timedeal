@@ -27,9 +27,12 @@ public class ItemController {
     }
 
     @DeleteMapping("")
-    public ResponseEntity<?> deleteItem(@PathVariable Long id) {
+    public ResponseEntity<?> deleteItem(
+            @RequestParam Long id,
+            HttpServletRequest request,
+            @CookieValue(name = "uuid", required = false) Cookie cookie) {
         log.info(String.format("상품 삭제"));
-        return itemService.deleteItem(id);
+        return itemService.deleteItem(id, request, cookie);
     }
 
     @GetMapping("/all")
@@ -38,14 +41,15 @@ public class ItemController {
     }
 
     @GetMapping("")
-    public ResponseEntity<?> getItem(@PathVariable Long id) {
+    public ResponseEntity<?> getItem(@RequestParam Long id) {
         return itemService.getItem(id);
     }
 
     @PutMapping("")
     public ResponseEntity<?> updateItem(
             @RequestBody ItemDto itemDto,
-            HttpServletRequest request) {
-        return itemService.updateItem(itemDto, request);
+            HttpServletRequest request,
+            @CookieValue(name = "uuid", required = false) Cookie cookie) {
+        return itemService.updateItem(itemDto, request, cookie);
     }
 }
