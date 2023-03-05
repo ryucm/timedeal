@@ -22,7 +22,7 @@ public class ItemController {
             @RequestBody ItemDto itemDto,
             HttpServletRequest request,
             @CookieValue(name = "uuid", required = false) Cookie cookie) {
-        log.info(String.format("상품 등록"));
+        log.info(String.format("상품 등록 요청"));
         return itemService.createItem(itemDto, request, cookie);
     }
 
@@ -31,7 +31,7 @@ public class ItemController {
             @RequestParam Long id,
             HttpServletRequest request,
             @CookieValue(name = "uuid", required = false) Cookie cookie) {
-        log.info(String.format("상품 삭제"));
+        log.info(String.format("상품 삭제 요청"));
         return itemService.deleteItem(id, request, cookie);
     }
 

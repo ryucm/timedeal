@@ -60,6 +60,7 @@ public class ItemService {
             return ResponseEntity.fail("상품 권한이 없습니다.");
         }
         itemRepository.deleteById(id);
+        log.info(String.format("상품 삭제 완료"));
         return ResponseEntity.success("삭제하였습니다.");
     }
 

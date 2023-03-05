@@ -22,19 +22,19 @@ public class MemberController {
 
     @PostMapping("")
     public ResponseEntity<?> signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
-        log.info(String.format("회원 등록 : memberId = %s",signUpRequestDto.getMemberId()));
+        log.info(String.format("회원 등록 요청 : memberId = %s",signUpRequestDto.getMemberId()));
         return memberService.signUp(signUpRequestDto);
     }
 
     @GetMapping("")
     public ResponseEntity<?> getMember(@RequestParam String memberId) {
-        log.info(String.format("회원 조회: memberId = %s", memberId));
+        log.info(String.format("회원 조회 요청: memberId = %s", memberId));
         return memberService.getMember(memberId);
     }
 
     @DeleteMapping("")
     public ResponseEntity<?> deleteMember(@RequestParam String memberId) {
-        log.info(String.format("회원 탈퇴: memberId = %s", memberId));
+        log.info(String.format("회원 탈퇴 요청: memberId = %s", memberId));
         return memberService.deleteMember(memberId);
     }
 
