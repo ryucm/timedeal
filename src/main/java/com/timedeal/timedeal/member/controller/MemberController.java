@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 @Slf4j
@@ -39,13 +38,9 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            HttpServletRequest request,
-            @RequestBody LoginRequestDto loginRequestDto,
-            HttpServletResponse response
-    ) {
+    public ResponseEntity<?> login(HttpServletRequest request, @RequestBody LoginRequestDto loginRequestDto) {
         log.info(String.format("로그인 시도 : memberId = %s", loginRequestDto.getMemberId()));
-        return memberService.login(request, loginRequestDto, response);
+        return memberService.login(request, loginRequestDto);
     }
 
     @PostMapping("/logout")

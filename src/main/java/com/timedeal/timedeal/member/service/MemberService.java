@@ -1,18 +1,19 @@
 package com.timedeal.timedeal.member.service;
 
+import com.timedeal.timedeal.exception.ErrorCode;
+import com.timedeal.timedeal.exception.Exceptions;
 import com.timedeal.timedeal.member.dto.request.LoginRequestDto;
 import com.timedeal.timedeal.member.dto.request.SignUpRequestDto;
 import com.timedeal.timedeal.member.dto.response.MemberResponseDto;
 import com.timedeal.timedeal.member.dto.response.ResponseEntity;
 import com.timedeal.timedeal.member.entity.Member;
 import com.timedeal.timedeal.member.repository.MemberRepository;
+import com.timedeal.timedeal.util.LoginUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 import java.util.Optional;
@@ -24,11 +25,10 @@ import java.util.UUID;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final LoginUtil loginUtil;
 
     public ResponseEntity<?> signUp(SignUpRequestDto signUpRequestDto) {
-        if (validatorMember(signUpRequestDto.getMemberId())) {
-            return ResponseEntity.fail("이미 존재하는 회원 ID입니다.");
-        }
+        loginUtil.validatorMember(signUpRequestDto.getMemberId());
         Member member = Member.builder()
                 .memberId(signUpRequestDto.getMemberId())
                 .email(signUpRequestDto.getEmail())
@@ -42,62 +42,35 @@ public class MemberService {
 
     @Transactional
     public ResponseEntity<?> deleteMember(String memberId) {
-        if (!validatorMember(memberId)) {
-            return ResponseEntity.fail("존재하지 않는 회원 ID 입니다.");
-        }
+        loginUtil.validatorMember(memberId);
         memberRepository.deleteByMemberId(memberId);
         log.info(String.format("회원 삭제 완료: memberId = %s", memberId));
         return ResponseEntity.success("success");
     }
 
     public ResponseEntity<?> getMember(String memberId) {
+        loginUtil.validatorMember(memberId);
         Optional<Member> member = memberRepository.findByMemberId(memberId);
-        if (member.isPresent()) {
-            log.info(String.format("회원 조회 완료: memberId = %s", memberId));
-            return ResponseEntity.success(member.get(), "success");
-        } else {
-            log.info(String.format("존재하지 않는 회원: memberId = %s", memberId));
-            return ResponseEntity.fail("회원 정보가 존재하지 않습니다.");
-        }
+        return ResponseEntity.success(member, "success");
     }
 
-    public ResponseEntity<?> login(
-            HttpServletRequest request,
-            LoginRequestDto loginRequestDto,
-            HttpServletResponse response) {
-        if (!validatorMember(loginRequestDto.getMemberId())) {
-            return ResponseEntity.fail("회원 정보가 없습니다.");
-        }
+    public ResponseEntity<?> login(HttpServletRequest request, LoginRequestDto loginRequestDto) {
+        loginUtil.validatorMember(loginRequestDto.getMemberId());
 
         Optional<Member> member = memberRepository.findByMemberId(loginRequestDto.getMemberId());
         if (!member.get().getPassword().equals(loginRequestDto.getPassword())) {
             log.info(String.format("회원 비밀번호 : %s, 요청 비밀번호 : %s", member.get().getPassword(), loginRequestDto.getPassword()));
-            return ResponseEntity.fail("비밀번호를 틀렸습니다.");
+            throw new Exceptions(ErrorCode.NOT_MATCHED_PASSWORD);
         }
 
-
-        // 로그인 성공 처리
-        // 세션이 있으면 있는 세션 반환, 없으면 신규 세션 생성
         HttpSession session = request.getSession();
         MemberResponseDto memberResponseDto = new MemberResponseDto(member);
-        String uuid = UUID.randomUUID().toString();
-        // 세션에 로그인 회원 정보 보관
-        session.setAttribute(uuid, memberResponseDto);
-
-        // 쿠키에 저장
-        Cookie cookie = new Cookie("uuid", uuid);
-        response.addCookie(cookie);
+        String loginMember = UUID.randomUUID().toString();
+        session.setAttribute(loginMember, memberResponseDto);
 
         log.info(String.format("로그인 정보 확인 : memberId = %s", member.get().getMemberId()));
         return ResponseEntity.success("로그인 성공");
     }
 
-    private boolean validatorMember(String memberId) {
-        if (!memberRepository.existsByMemberId(memberId)) {
-            log.info(String.format("존재하지 않는 회원: memberId = %s", memberId));
-            return false;
-        }
-        log.info(String.format("회원 정보 확인 : memberId = %s", memberId));
-        return true;
-    }
+
 }
