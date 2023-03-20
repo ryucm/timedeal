@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -15,12 +16,15 @@ import javax.persistence.*;
 @AllArgsConstructor
 public class Item {
     @Id
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String itemName;
-    int price;
-    int stock;
-
+    private Long id;
+    private String itemName;
+    private int price;
+    private int stock;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     @ManyToOne(fetch = FetchType.LAZY)
-    Member member;
+    @JoinColumn(name = "member_id")
+    private Member admin;
 }

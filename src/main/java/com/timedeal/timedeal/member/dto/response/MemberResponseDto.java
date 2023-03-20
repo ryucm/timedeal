@@ -8,10 +8,10 @@ import java.util.Optional;
 
 @Getter
 public class MemberResponseDto {
-    Long id;
-    String memberId;
-    String email;
-    Role role;
+    private Long id;
+    private String memberId;
+    private String email;
+    private Role role;
 
     public MemberResponseDto(Optional<Member> member) {
         this.id = member.get().getId();

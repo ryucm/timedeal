@@ -3,42 +3,36 @@ package com.timedeal.timedeal.item.service;
 import com.timedeal.timedeal.item.dto.ItemDto;
 import com.timedeal.timedeal.item.entity.Item;
 import com.timedeal.timedeal.item.repository.ItemRepository;
-import com.timedeal.timedeal.member.dto.response.MemberResponseDto;
 import com.timedeal.timedeal.member.dto.response.ResponseEntity;
 import com.timedeal.timedeal.member.entity.Member;
-import com.timedeal.timedeal.member.entity.Role;
-import com.timedeal.timedeal.member.repository.MemberRepository;
+import com.timedeal.timedeal.util.LoginUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.CookieValue;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
-    private final MemberRepository memberRepository;
+    private final LoginUtil loginUtil;
 
-    public ResponseEntity<?> createItem(
-            ItemDto itemDto,
-            HttpServletRequest request,
-            Cookie cookie) {
-        checkLogin(cookie);
-
-        HttpSession session = request.getSession(false);
-        Optional<Member> member = loginMember(session, cookie);
+    public ResponseEntity<?> createItem(ItemDto itemDto, Optional<Member> loginMember) {
 
         Item newItem = Item.builder()
                 .itemName(itemDto.getItemName())
                 .price(itemDto.getPrice())
                 .stock(itemDto.getStock())
-                .member(member.get())
+                .admin(loginMember.get())
+                .startTime(itemDto.getStartTime())
                 .build();
 
         Item savedItem = itemRepository.save(newItem);
@@ -50,51 +44,69 @@ public class ItemService {
             Long id,
             HttpServletRequest request,
             Cookie cookie) {
-        checkLogin(cookie);
 
-        HttpSession session = request.getSession(false);
-        Optional<Member> member = loginMember(session, cookie);
+        Optional<Member> loginMember = loginUtil.login(request, cookie);
         Optional<Item> item = itemRepository.findById(id);
 
-        if (!member.get().getMemberId().equals(item.get().getMember().getMemberId())) {
-            return ResponseEntity.fail("상품 권한이 없습니다.");
+        if (!loginMember.get().getMemberId().equals(item.get().getAdmin().getMemberId())) {
+            log.info(String.format("상품 삭제 권한이 없습니다."));
+            return ResponseEntity.fail("상품 삭제 권한이 없습니다.");
         }
         itemRepository.deleteById(id);
         log.info(String.format("상품 삭제 완료"));
         return ResponseEntity.success("삭제하였습니다.");
     }
 
-    public ResponseEntity<?> getItems() {
-        return ResponseEntity.success("성공");
+    public ResponseEntity<?> getItemList() {
+        List<Item> itemList = itemRepository.findAll();
+        List<ItemDto> itemDtoList = itemList.stream().map(ItemDto::new).collect(Collectors.toList());
+        log.info(String.format("상품 목록 조회"));
+        return ResponseEntity.success(itemDtoList,"성공");
     }
 
     public ResponseEntity<?> getItem(Long id) {
+        ItemDto itemDto = itemRepository.findById(id).map(ItemDto::new).get();
+        log.info(String.format("상품 조회. 상품 이름 : %s", itemDto.getItemName()));
+        return ResponseEntity.success(itemDto, "성공");
+    }
+
+    public ResponseEntity<?> updateItem(Long id, ItemDto itemDto, HttpServletRequest request, Cookie cookie) {
+
+        Optional<Member> loginMember = loginUtil.login(request, cookie);
+
+        Optional<Item> item = itemRepository.findById(id);
+
+        if (!loginMember.get().getMemberId().equals(item.get().getAdmin().getMemberId())) {
+            log.info(String.format("상품 변경 권한이 없습니다."));
+            return ResponseEntity.fail("상품 변경 권한이 없습니다.");
+        }
+
+        Item updateItem = Item.builder()
+                .id(id)
+                .itemName(itemDto.getItemName())
+                .stock(itemDto.getStock())
+                .price(itemDto.getPrice())
+                .startTime(itemDto.getStartTime())
+                .admin(loginMember.get())
+                .build();
+        Item savedItem = itemRepository.save(updateItem);
+        log.info(String.format("상품 변경 완료. 상품 이름 : %s", savedItem.getItemName()));
+
         return ResponseEntity.success("성공");
     }
 
-    public ResponseEntity<?> updateItem(ItemDto itemDto, HttpServletRequest request, Cookie cookie) {
-        checkLogin(cookie);
 
-        HttpSession session = request.getSession(false);
-        Optional<Member> member = loginMember(session, cookie);
-        return ResponseEntity.success("성공");
-    }
 
-    private void checkLogin(Cookie cookie) {
-        if (cookie == null) {
-            log.info(String.format("로그인이 필요합니다."));
-            throw  new IllegalArgumentException();
-        }
-    }
-
-    private Optional<Member> loginMember(HttpSession session, Cookie cookie) {
-        MemberResponseDto findMember = (MemberResponseDto) session.getAttribute(cookie.getValue());
-        Optional<Member> member = memberRepository.findByMemberId(findMember.getMemberId());
-
-        if (member.get().getRole() == Role.USER) {
-            log.info(String.format("상품 권한이 없습니다. 회원 권한 = %s", member.get().getRole()));
-            throw  new IllegalArgumentException();
-        }
-        return member;
-    }
+//    public ResponseEntity<?> getOrderList(Long id) {
+//
+//        Optional<Item> item = itemRepository.findById(id);
+//        if (item == null) {
+//            log.info(String.format("존재하지 않는 Item"));
+//            return ResponseEntity.fail("해당 아이템이 존재하지 않습니다.");
+//        }
+//
+//        List<Member> buyer = item.get().getBuyer();
+//        List<MemberDto> memberDtoList = buyer.stream().map(MemberDto::new).collect(Collectors.toList());
+//        return ResponseEntity.success(memberDtoList, "success");
+//    }
 }
