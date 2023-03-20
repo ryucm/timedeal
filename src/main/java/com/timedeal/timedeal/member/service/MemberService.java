@@ -4,7 +4,6 @@ import com.timedeal.timedeal.exception.ErrorCode;
 import com.timedeal.timedeal.exception.Exceptions;
 import com.timedeal.timedeal.member.dto.request.LoginRequestDto;
 import com.timedeal.timedeal.member.dto.request.SignUpRequestDto;
-import com.timedeal.timedeal.member.dto.response.MemberResponseDto;
 import com.timedeal.timedeal.member.dto.response.ResponseEntity;
 import com.timedeal.timedeal.member.entity.Member;
 import com.timedeal.timedeal.member.repository.MemberRepository;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -49,26 +47,22 @@ public class MemberService {
     }
 
     public ResponseEntity<?> getMember(String memberId) {
-        loginUtil.validatorMember(memberId);
-        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(()-> new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
         return ResponseEntity.success(member, "success");
     }
 
     public ResponseEntity<?> login(HttpServletRequest request, LoginRequestDto loginRequestDto) {
         loginUtil.validatorMember(loginRequestDto.getMemberId());
 
-        Optional<Member> member = memberRepository.findByMemberId(loginRequestDto.getMemberId());
-        if (!member.get().getPassword().equals(loginRequestDto.getPassword())) {
-            log.info(String.format("회원 비밀번호 : %s, 요청 비밀번호 : %s", member.get().getPassword(), loginRequestDto.getPassword()));
-            throw new Exceptions(ErrorCode.NOT_MATCHED_PASSWORD);
-        }
+        Member member = memberRepository.findByMemberId(loginRequestDto.getMemberId())
+                .orElseThrow(()->new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
 
         HttpSession session = request.getSession();
-        MemberResponseDto memberResponseDto = new MemberResponseDto(member);
         String loginMember = UUID.randomUUID().toString();
-        session.setAttribute(loginMember, memberResponseDto);
+        session.setAttribute(loginMember, member);
 
-        log.info(String.format("로그인 정보 확인 : memberId = %s", member.get().getMemberId()));
+        log.info(String.format("로그인 정보 확인 : memberId = %s", member.getMemberId()));
         return ResponseEntity.success("로그인 성공");
     }
 
