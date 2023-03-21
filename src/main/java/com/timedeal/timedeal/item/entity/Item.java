@@ -1,5 +1,7 @@
 package com.timedeal.timedeal.item.entity;
 
+import com.timedeal.timedeal.exception.ErrorCode;
+import com.timedeal.timedeal.exception.Exceptions;
 import com.timedeal.timedeal.item.dto.ItemDto;
 import com.timedeal.timedeal.member.entity.Member;
 import lombok.AllArgsConstructor;
@@ -38,5 +40,17 @@ public class Item {
         this.startTime = ObjectUtils.defaultIfNull(itemDto.getStartTime(), this.startTime);
         this.endTime = ObjectUtils.defaultIfNull(itemDto.getEndTime(), this.endTime);
         return this;
+    }
+
+    public boolean isSoldOut(int purchaseNum) {
+        if (this.getStock() - purchaseNum >= 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean isSaleTime() {
+        return LocalDateTime.now().isAfter(this.getEndTime()) && LocalDateTime.now().isBefore(this.getEndTime());
     }
 }

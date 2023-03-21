@@ -7,7 +7,7 @@ import com.timedeal.timedeal.item.entity.Item;
 import com.timedeal.timedeal.item.repository.ItemRepository;
 import com.timedeal.timedeal.member.dto.response.ResponseEntity;
 import com.timedeal.timedeal.member.entity.Member;
-import com.timedeal.timedeal.util.LoginUtil;
+import com.timedeal.timedeal.util.MemberUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,7 @@ import javax.transaction.Transactional;
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
-    private final LoginUtil loginUtil;
+    private final MemberUtil memberUtil;
 
     public ResponseEntity<?> createItem(ItemDto itemDto, Member loginMember) {
 
@@ -41,7 +41,7 @@ public class ItemService {
 
     public ResponseEntity<?> deleteItem(Long id, Member loginMember) {
 
-        loginUtil.checkItemPermission(loginMember);
+        memberUtil.checkItemPermission(loginMember);
         itemRepository.deleteById(id);
         log.info("상품 삭제 완료");
         return ResponseEntity.success("삭제하였습니다.");
@@ -64,7 +64,7 @@ public class ItemService {
 
         Item item = itemRepository.findById(id)
                 .orElseThrow(()-> new Exceptions(ErrorCode.NOT_FOUND_ITEM));
-        loginUtil.checkItemPermission(loginMember);
+        memberUtil.checkItemPermission(loginMember);
 
         Item updateItem = item.updateItem(itemDto);
         Item savedItem = itemRepository.save(updateItem);

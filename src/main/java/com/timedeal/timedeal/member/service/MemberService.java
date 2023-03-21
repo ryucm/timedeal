@@ -7,7 +7,7 @@ import com.timedeal.timedeal.member.dto.request.SignUpRequestDto;
 import com.timedeal.timedeal.member.dto.response.ResponseEntity;
 import com.timedeal.timedeal.member.entity.Member;
 import com.timedeal.timedeal.member.repository.MemberRepository;
-import com.timedeal.timedeal.util.LoginUtil;
+import com.timedeal.timedeal.util.MemberUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,10 +23,10 @@ import java.util.UUID;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final LoginUtil loginUtil;
+    private final MemberUtil memberUtil;
 
     public ResponseEntity<?> signUp(SignUpRequestDto signUpRequestDto) {
-        loginUtil.validatorMember(signUpRequestDto.getMemberId());
+        memberUtil.validatorMember(signUpRequestDto.getMemberId());
         Member member = Member.builder()
                 .memberId(signUpRequestDto.getMemberId())
                 .email(signUpRequestDto.getEmail())
@@ -40,7 +40,7 @@ public class MemberService {
 
     @Transactional
     public ResponseEntity<?> deleteMember(String memberId) {
-        loginUtil.validatorMember(memberId);
+        memberUtil.validatorMember(memberId);
         memberRepository.deleteByMemberId(memberId);
         log.info(String.format("회원 삭제 완료: memberId = %s", memberId));
         return ResponseEntity.success("success");
@@ -53,7 +53,7 @@ public class MemberService {
     }
 
     public ResponseEntity<?> login(HttpServletRequest request, LoginRequestDto loginRequestDto) {
-        loginUtil.validatorMember(loginRequestDto.getMemberId());
+        memberUtil.validatorMember(loginRequestDto.getMemberId());
 
         Member member = memberRepository.findByMemberId(loginRequestDto.getMemberId())
                 .orElseThrow(()->new Exceptions(ErrorCode.NOT_FOUND_MEMBER));

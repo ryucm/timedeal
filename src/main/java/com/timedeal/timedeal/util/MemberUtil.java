@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LoginUtil {
+public class MemberUtil {
 
     private final MemberRepository memberRepository;
 
