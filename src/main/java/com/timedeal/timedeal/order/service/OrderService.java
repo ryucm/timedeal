@@ -24,14 +24,14 @@ public class OrderService {
     final int PURCHASE_NUM =  1;
 
     public synchronized ResponseEntity<?> buyItem(Member member, Long itemId) {
-        if (orderRepository.findByUserIdAndItemId(member.getId(), itemId)) {
-            throw new Exceptions(ErrorCode.DUPLICATED_ORDER);
-        }
-
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new Exceptions(ErrorCode.NOT_FOUND_ITEM));
         if (item.isSoldOut(PURCHASE_NUM)) {
             throw new Exceptions(ErrorCode.SOLD_OUT);
+        }
+
+        if (orderRepository.findByBuyerAndProduct(member, item)) {
+            throw new Exceptions(ErrorCode.DUPLICATED_ORDER);
         }
 
         if (!item.isSaleTime()) {
@@ -47,7 +47,7 @@ public class OrderService {
     }
 
     public ResponseEntity<?> getOrderList(Member member, Pageable pageable) {
-        Page<Orders> ordersList = orderRepository.findAllByMemberId(member.getMemberId(), pageable);
+        Page<Orders> ordersList = orderRepository.findAllByBuyer(member, pageable);
         return ResponseEntity.success(ordersList, "유저가 구매한 상품 리스트 조회");
     }
 
@@ -57,7 +57,7 @@ public class OrderService {
         if (!(item.getAdmin() == member)) {
             throw new Exceptions(ErrorCode.INVALID_PERMISSION);
         }
-        Page<Orders> ordersList = orderRepository.findAllByItemId(itemId, pageable);
+        Page<Orders> ordersList = orderRepository.findAllByProduct(item, pageable);
         return ResponseEntity.success(ordersList, "상품별 구매한 멤버 리스트 조회");
     }
 }

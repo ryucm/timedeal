@@ -15,11 +15,11 @@ import javax.persistence.*;
 public class Member {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String memberId;
     private String email;
     private String password;
     private Role role;
+
 }

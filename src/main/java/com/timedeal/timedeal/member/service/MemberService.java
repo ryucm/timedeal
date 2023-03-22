@@ -59,8 +59,7 @@ public class MemberService {
                 .orElseThrow(()->new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
 
         HttpSession session = request.getSession();
-        String loginMember = UUID.randomUUID().toString();
-        session.setAttribute(loginMember, member);
+        session.setAttribute("loginMember", member);
 
         log.info(String.format("로그인 정보 확인 : memberId = %s", member.getMemberId()));
         return ResponseEntity.success("로그인 성공");

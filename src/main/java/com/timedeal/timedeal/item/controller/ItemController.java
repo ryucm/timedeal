@@ -19,7 +19,7 @@ public class ItemController {
     @PostMapping("")
     public ResponseEntity<?> createItem(
             @RequestBody ItemDto itemDto,
-            @SessionAttribute(name = "loginMember", required = false) Member member) {
+            @SessionAttribute(name = "loginMember") Member member) {
         log.info("상품 등록 요청");
         return itemService.createItem(itemDto, member);
     }
@@ -27,7 +27,7 @@ public class ItemController {
     @DeleteMapping("")
     public ResponseEntity<?> deleteItem(
             @RequestParam Long id,
-            @SessionAttribute(name = "loginMember", required = false) Member member) {
+            @SessionAttribute(name = "loginMember") Member member) {
         log.info("상품 삭제 요청");
         return itemService.deleteItem(id, member);
     }
@@ -46,7 +46,7 @@ public class ItemController {
     public ResponseEntity<?> updateItem(
             @RequestParam Long id,
             @RequestBody ItemDto itemDto,
-            @SessionAttribute(name = "loginMember", required = false) Member member) {
+            @SessionAttribute(name = "loginMember") Member member) {
         return itemService.updateItem(id, itemDto, member);
     }
 

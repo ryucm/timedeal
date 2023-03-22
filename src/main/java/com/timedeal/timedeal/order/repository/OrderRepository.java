@@ -1,5 +1,7 @@
 package com.timedeal.timedeal.order.repository;
 
+import com.timedeal.timedeal.item.entity.Item;
+import com.timedeal.timedeal.member.entity.Member;
 import com.timedeal.timedeal.order.entity.Orders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,9 +10,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Orders, Long> {
-    boolean findByUserIdAndItemId(Long memberId, Long itemId);
+    boolean findByBuyerAndProduct(Member member, Item item);
 
-    Page<Orders> findAllByMemberId(String memberId, Pageable pageable);
+    Page<Orders> findAllByBuyer(Member member, Pageable pageable);
 
-    Page<Orders> findAllByItemId(Long itemId, Pageable pageable);
+    Page<Orders> findAllByProduct(Item item, Pageable pageable);
 }
