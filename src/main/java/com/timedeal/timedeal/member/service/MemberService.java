@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -26,7 +25,9 @@ public class MemberService {
     private final MemberUtil memberUtil;
 
     public ResponseEntity<?> signUp(SignUpRequestDto signUpRequestDto) {
-        memberUtil.validatorMember(signUpRequestDto.getMemberId());
+        if (memberRepository.existsByMemberId(signUpRequestDto.getMemberId())) {
+            throw new Exceptions(ErrorCode.EXIST_MEMBER);
+        }
         Member member = Member.builder()
                 .memberId(signUpRequestDto.getMemberId())
                 .email(signUpRequestDto.getEmail())

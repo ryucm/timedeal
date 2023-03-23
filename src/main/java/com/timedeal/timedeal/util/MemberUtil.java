@@ -26,8 +26,9 @@ public class MemberUtil {
     }
 
     public void checkItemPermission(Member member) {
+        log.info(String.format("Member 권한 : %s", member.getRole()));
         if (member.getRole() == Role.USER) {
-            log.info(String.format("상품 권한이 없습니다. 회원 권한 = %s", member.getRole()));
+            log.error(String.format("상품 권한이 없습니다. 회원 권한 = %s", member.getRole()));
             throw  new Exceptions(ErrorCode.INVALID_PERMISSION);
         }
     }

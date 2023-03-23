@@ -26,6 +26,7 @@ public class ItemService {
 
     public ResponseEntity<?> createItem(ItemDto itemDto, Member loginMember) {
 
+        memberUtil.checkItemPermission(loginMember);
         Item newItem = Item.builder()
                 .itemName(itemDto.getItemName())
                 .price(itemDto.getPrice())

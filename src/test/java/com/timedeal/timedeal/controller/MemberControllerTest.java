@@ -1,8 +1,9 @@
-package com.timedeal.timedeal.member.service;
+package com.timedeal.timedeal.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.timedeal.timedeal.member.entity.Member;
 import com.timedeal.timedeal.member.entity.Role;
+import com.timedeal.timedeal.member.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,19 +25,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class MemberServiceTest {
+class MemberControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private MemberService memberService;
-
     @Autowired
     private ObjectMapper objectMapper;
 
-    @BeforeEach
-    @DisplayName("회원가입 테스트")
+    @MockBean
+    private MemberService memberService;
+
+    @Test
+    @DisplayName("회원가입")
     public void signUp() throws Exception {
         Map<String, String> input = new HashMap<>();
         input.put("memberId", "memberId");
