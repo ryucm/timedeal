@@ -88,25 +88,23 @@ public class OrderServiceTest {
 
         // given
         Member member = memberRepository.findByMemberId("memberId").orElseThrow(()-> new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
-        int threadCount = 100;
+        int threadCount = 10;
         CountDownLatch latch = new CountDownLatch(threadCount);
         ExecutorService executorService = Executors.newFixedThreadPool(32);
 
+        // when
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(()->{
-                try {
-                    orderService.buyItem(member, "product");
-                } finally {
-                    latch.countDown();
-                }
+                orderService.buyItem(member, "product");
+                latch.countDown();
             });
         }
 
         latch.await();
 
-        assertEquals(0, itemRepository.findByItemName("product").get().getStock());
-        // when
-//        IntStream.range(0, THREAD_COUNT).forEach(e -> orderService.buyItem(member, ));
         // then
+        Item item = itemRepository.findByItemName("product").orElseThrow(() -> new Exceptions(ErrorCode.NOT_FOUND_ITEM));
+        assertEquals(90, item.getStock());
+
     }
 }

@@ -8,7 +8,6 @@ import com.timedeal.timedeal.member.dto.response.ResponseEntity;
 import com.timedeal.timedeal.member.entity.Member;
 import com.timedeal.timedeal.order.entity.Orders;
 import com.timedeal.timedeal.order.repository.OrderRepository;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SynchronizedOrderServiceImpl implements OrderService{
+public class PessimisticLockOrderServiceImpl implements OrderService {
     @Autowired
     private final ItemRepository itemRepository;
 
@@ -28,10 +29,10 @@ public class SynchronizedOrderServiceImpl implements OrderService{
     final int PURCHASE_NUM =  1;
 
     @Override
-    public synchronized ResponseEntity<?> buyItem(Member member, String itemName) {
+    @Transactional
+    public ResponseEntity<?> buyItem(Member member, String itemName) {
         // item 조회
-        Item item = itemRepository.findByItemName(itemName)
-                .orElseThrow(() -> new Exceptions(ErrorCode.NOT_FOUND_ITEM));
+        Item item = itemRepository.findByIdWithPessimisticLock(itemName);
 
         // 주문 내역 조회
 
@@ -39,8 +40,10 @@ public class SynchronizedOrderServiceImpl implements OrderService{
         item.checkSaleTime();
 
         // 재고 변경
+        log.info(String.format("기존 재고 : %s", item.getStock()));
         item.checkSoldOut(PURCHASE_NUM);
         itemRepository.save(item);
+        log.info(String.format("변경 재고 : %s", item.getStock()));
 
         // 주문하기
         Orders newOrder = Orders.builder()
@@ -50,6 +53,7 @@ public class SynchronizedOrderServiceImpl implements OrderService{
         Orders completeOrder = orderRepository.save(newOrder);
         return ResponseEntity.success(completeOrder, "구매가 완료되었습니다.");
     }
+
     @Override
     public ResponseEntity<?> getOrderList(Member member, Pageable pageable) {
         Page<Orders> ordersList = orderRepository.findAllByBuyer(member, pageable);

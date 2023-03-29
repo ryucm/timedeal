@@ -4,6 +4,8 @@ package com.timedeal.timedeal;
 import com.timedeal.timedeal.item.repository.ItemRepository;
 import com.timedeal.timedeal.order.repository.OrderRepository;
 import com.timedeal.timedeal.order.service.OrderService;
+import com.timedeal.timedeal.order.service.OrderServiceImpl;
+import com.timedeal.timedeal.order.service.PessimisticLockOrderServiceImpl;
 import com.timedeal.timedeal.order.service.SynchronizedOrderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,8 @@ public class AppConfig {
 
     @Bean
     public OrderService orderService() {
-        return new SynchronizedOrderServiceImpl(itemRepository, orderRepository);
+//        return new OrderServiceImpl(itemRepository, orderRepository);
+//        return new SynchronizedOrderServiceImpl(itemRepository, orderRepository);
+        return new PessimisticLockOrderServiceImpl(itemRepository, orderRepository);
     }
 }
