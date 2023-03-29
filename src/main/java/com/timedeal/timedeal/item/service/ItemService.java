@@ -33,6 +33,7 @@ public class ItemService {
                 .stock(itemDto.getStock())
                 .admin(loginMember)
                 .startTime(itemDto.getStartTime())
+                .endTime(itemDto.getEndTime())
                 .build();
 
         Item savedItem = itemRepository.save(newItem);

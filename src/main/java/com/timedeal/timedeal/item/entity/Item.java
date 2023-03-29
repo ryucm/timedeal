@@ -42,15 +42,17 @@ public class Item {
         return this;
     }
 
-    public boolean isSoldOut(int purchaseNum) {
-        if (this.getStock() - purchaseNum >= 0) {
-            return false;
+    public void checkSoldOut(int purchaseNum) {
+        if (this.getStock() - purchaseNum < 0) {
+            throw new Exceptions(ErrorCode.SOLD_OUT);
         } else {
-            return true;
+            this.stock -= purchaseNum;
         }
     }
 
-    public boolean isSaleTime() {
-        return LocalDateTime.now().isAfter(this.getEndTime()) && LocalDateTime.now().isBefore(this.getEndTime());
+    public void checkSaleTime() {
+        if (!LocalDateTime.now().isAfter(this.getStartTime()) && LocalDateTime.now().isBefore(this.getEndTime())) {
+            throw new Exceptions(ErrorCode.NOT_SALE_TIME);
+        }
     }
 }

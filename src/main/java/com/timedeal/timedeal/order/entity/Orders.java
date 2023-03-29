@@ -4,11 +4,13 @@ import com.timedeal.timedeal.item.entity.Item;
 import com.timedeal.timedeal.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class Orders {
 

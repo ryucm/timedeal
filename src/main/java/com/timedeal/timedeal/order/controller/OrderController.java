@@ -7,9 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-
 @Slf4j
 @RestController
 @RequestMapping("/order")
@@ -21,7 +18,7 @@ public class OrderController {
     @PostMapping("")
     public ResponseEntity<?> order(
             @SessionAttribute(name = "loginMember") Member member,
-            Long itemId) {
-        return orderService.buyItem(member, itemId);
+            String itemName) {
+        return orderService.buyItem(member, itemName);
     }
 }

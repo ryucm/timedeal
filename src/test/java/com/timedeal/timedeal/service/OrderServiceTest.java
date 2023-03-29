@@ -1,2 +1,112 @@
-package com.timedeal.timedeal.service;public class OrderServiceTest {
+package com.timedeal.timedeal.service;
+
+import com.timedeal.timedeal.exception.ErrorCode;
+import com.timedeal.timedeal.exception.Exceptions;
+import com.timedeal.timedeal.item.entity.Item;
+import com.timedeal.timedeal.item.repository.ItemRepository;
+import com.timedeal.timedeal.item.service.ItemService;
+import com.timedeal.timedeal.member.entity.Member;
+import com.timedeal.timedeal.member.entity.Role;
+import com.timedeal.timedeal.member.repository.MemberRepository;
+import com.timedeal.timedeal.order.repository.OrderRepository;
+import com.timedeal.timedeal.order.service.OrderService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.time.LocalDateTime;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+
+@SpringBootTest
+public class OrderServiceTest {
+
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private ItemService itemService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @BeforeEach
+    void before() {
+        Member member = Member.builder()
+                .email("memberEmail")
+                .password("password")
+                .memberId("memberId")
+                .role(Role.ADMIN)
+                .build();
+
+        memberRepository.save(member);
+
+        Item item = Item.builder()
+                .itemName("product")
+                .price(1000)
+                .stock(100)
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.of(2023, 3, 30, 0, 0))
+                .build();
+
+        itemRepository.save(item);
+    }
+
+    @AfterEach
+    void after() {
+        orderRepository.deleteAll();
+        itemRepository.deleteAll();
+        memberRepository.deleteAll();
+
+    }
+
+    @Test
+    @DisplayName("구매하기 Test")
+    void order() {
+        Member member = memberRepository.findByMemberId("memberId").orElseThrow(()-> new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
+        orderService.buyItem(member, "product");
+
+        assertEquals(99, itemRepository.findByItemName("product").get().getStock());
+    }
+
+    @Test
+    @DisplayName("동시에 100개의 요청")
+    void decrease() throws InterruptedException {
+
+        // given
+        Member member = memberRepository.findByMemberId("memberId").orElseThrow(()-> new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
+        int threadCount = 100;
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(()->{
+                try {
+                    orderService.buyItem(member, "product");
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+
+        assertEquals(0, itemRepository.findByItemName("product").get().getStock());
+        // when
+//        IntStream.range(0, THREAD_COUNT).forEach(e -> orderService.buyItem(member, ));
+        // then
+    }
 }

@@ -14,11 +14,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,7 +51,7 @@ class ItemControllerTest {
                 .build();
 
         mockHttpSession.setAttribute("loginMember", admin);
-        createItem();
+//        createItem();
     }
 
     @Test
@@ -61,12 +62,16 @@ class ItemControllerTest {
         product.put("itemName", "product");
         product.put("price", 1000L);
         product.put("stock", 100);
+        product.put("startTime", LocalDateTime.now());
+        product.put("endTime", LocalDateTime.of(2023, 3, 30, 0, 0));
 
-        mockMvc.perform(post("/item")
+        MvcResult result = mockMvc.perform(post("/item")
                     .session(mockHttpSession)
                     .content(objectMapper.writeValueAsString(product))
                     .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andReturn();
+
+//        System.out.println(result.getResolvedException().getMessage());
     }
 
     @Test

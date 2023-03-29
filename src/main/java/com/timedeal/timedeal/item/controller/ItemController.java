@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @RequestMapping("/item")
@@ -18,7 +20,7 @@ public class ItemController {
 
     @PostMapping("")
     public ResponseEntity<?> createItem(
-            @RequestBody ItemDto itemDto,
+            @Valid @RequestBody ItemDto itemDto,
             @SessionAttribute(name = "loginMember") Member member) {
         log.info("상품 등록 요청");
         return itemService.createItem(itemDto, member);
