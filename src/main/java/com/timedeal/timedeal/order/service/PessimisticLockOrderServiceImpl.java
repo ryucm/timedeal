@@ -32,7 +32,7 @@ public class PessimisticLockOrderServiceImpl implements OrderService {
     @Transactional
     public ResponseEntity<?> buyItem(Member member, String itemName) {
         // item 조회
-        Item item = itemRepository.findByIdWithPessimisticLock(itemName);
+        Item item = itemRepository.findByItemNameWithPessimisticLock(itemName);
 
         // 주문 내역 조회
 
