@@ -1,4 +1,4 @@
-# timedeal
+# Timedeal
 
 # 목차
 
@@ -25,7 +25,7 @@
 
 ## 프로젝트 설명
 
-동시성 테스트를 목적으로 [Numble](https://www.numble.it/b1f4ecbb-67b7-488a-b7dc-ca8824f43a60)에서 진행된 프로그램에 참여한 개인 프로젝트입니다.
+타임딜 이커머스 서비스의 동시성 처리 프로젝트
 
 ### 구현기능
 - [회원] 가입/탈퇴/조회
@@ -46,6 +46,10 @@
 - 구매하기 API는 구매 성공/실패만 구분해도 된다.
 
 ## 설계
+
+### Git Flow 적용
+Dev branch : 로컬 환경, 개발 코드, 테스트 
+Deploy branch : 배포 브랜치
 
 ### ERD
 ![image](https://user-images.githubusercontent.com/89899249/227125067-ac2ab4ff-5b16-42ac-8287-3c2c3853061e.png)
@@ -97,11 +101,16 @@
 |     | 성능 테스트        |  
 
 ## 기술적 고민
-**Content**
-- synchronized
-- Java에서의 Lock
-- Database의 Lock
+
+### 현재 구현되어 있는 동시성 처리
+- synchronized   
 - Distribute Lock
+  - Redis(Lettuce)
+  - Redis(Redisson)
+- Pessimistic Lock
+- Optimistic Lock
+
+
  
 위에서 열거한 Lock에 관한 공부 내용은 블로그에 기술하였습니다.
 
@@ -110,14 +119,14 @@
 [Java, Database, Synchronized 등 다양한 동시성 제어 방법 in Java (2)](https://ckd12394.tistory.com/40)
 
 
-### 위에 있는 각각의 Lock들은 어떤 환경에서 사용하는 것이 좋을까?
+### Q1. 위에 있는 각각의 Lock들은 어떤 환경에서 사용하는 것이 좋을까?
 블로그에 각 Lock의 장단점과 특성에 대해 정리하였으며, 고민의 결과 아래와 같이 정리하였다.
-- Synchronized : 단일 서버에서 사용
+- Synchronized : 단일 서버에서 사용. 단 오버헤드의 가능성을 염두해 두어야 함.
 - Java의 Lock : 단일 서버에서 lock의 세밀한 동시성 제어가 필요할 때 사용
-- Database의 Lock : 여러 개의 서버를 사용할 때
-- Distribute Lock : 분산 시스템을 사용할 때
+- Database의 Lock : 여러 개의 서버를 사용할 때. DB 부하 테스트가 필요함
+- Distribute Lock : 분산 시스템을 사용할 때. Redis or Zookeeper의 추가에 따른 비용 고민 필요
 
-### Service 단계에서 Controller 로 객체를 반환할 때에도 ResponseEntity로 넘겨주는 것이 맞을까?
+### Q2. Service 단계에서 Controller 로 객체를 반환할 때에도 ResponseEntity로 넘겨주는 것이 맞을까?
  처음에는 Controller는 비즈니스 로직이 있는 Service를 호출하는 역할이니까 최대한 간결하게 작성해야겠다고 생각했다.
  또한 service에서 객체를 받아서 다시 ResponseEntity에 넣어서 반환해주는 것보다 애초에 Service에서 ResponseEntity로 반환을 한다면 Controller가 더 간결해지지 않을까 했다.
  다만 한편으로는 Service는 Service로직을 실행한 것만 담당하고 Controller는 전달의 역할이니 ResponseEntity는 Controller의 역할이 맞는 게 아닌가 했다.
@@ -126,7 +135,7 @@
 ## TO-DO
 - [ ] 성능측정
 - [ ] 동시성 처리 방법 변경 후 성능 테스트
- - [ ] JPA Optimistic Lock 활용
- - [ ] Redis Lock 활용
- - [ ] DB Lock 활용
+ - [x] JPA Optimistic Lock 활용
+ - [x] Redis Lock 활용
+ - [x] DB Lock 활용
 - [ ] 테스트 코드
