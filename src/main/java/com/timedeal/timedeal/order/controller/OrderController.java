@@ -18,7 +18,7 @@ public class OrderController {
     @PostMapping("")
     public ResponseEntity<?> order(
             @SessionAttribute(name = "loginMember") Member member,
-            String itemName) {
+            String itemName) throws InterruptedException {
         return orderService.buyItem(member, itemName);
     }
 }

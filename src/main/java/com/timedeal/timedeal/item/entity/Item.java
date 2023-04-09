@@ -12,7 +12,6 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Entity
 @Getter
@@ -29,6 +28,10 @@ public class Item {
     private int stock;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member admin;

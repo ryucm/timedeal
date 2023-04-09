@@ -5,7 +5,7 @@ import com.timedeal.timedeal.member.entity.Member;
 import org.springframework.data.domain.Pageable;
 
 public interface OrderService {
-    public ResponseEntity<?> buyItem(Member member, String itemName);
+    public ResponseEntity<?> buyItem(Member member, String itemName) throws InterruptedException;
 
     public ResponseEntity<?> getOrderList(Member member, Pageable pageable);
 

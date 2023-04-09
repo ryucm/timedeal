@@ -2,6 +2,7 @@ package com.timedeal.timedeal.service;
 
 import com.timedeal.timedeal.exception.ErrorCode;
 import com.timedeal.timedeal.exception.Exceptions;
+import com.timedeal.timedeal.facade.OptimisticLockFacade;
 import com.timedeal.timedeal.item.entity.Item;
 import com.timedeal.timedeal.item.repository.ItemRepository;
 import com.timedeal.timedeal.item.service.ItemService;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,23 +45,33 @@ public class OrderServiceTest {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private OptimisticLockFacade optimisticLockFacade;
+
     @BeforeEach
     void before() {
-        Member member = Member.builder()
-                .email("memberEmail")
-                .password("password")
-                .memberId("memberId")
-                .role(Role.ADMIN)
-                .build();
+        orderRepository.deleteAll();
+        itemRepository.deleteAll();
+        memberRepository.deleteAll();
 
-        memberRepository.save(member);
+        Optional<Member> member = memberRepository.findByMemberId("memberId");
+        if (!member.isPresent()) {
+            Member newMember = Member.builder()
+                    .email("memberEmail")
+                    .password("password")
+                    .memberId("memberId")
+                    .role(Role.ADMIN)
+                    .build();
+
+            memberRepository.save(newMember);
+        }
 
         Item item = Item.builder()
                 .itemName("product")
                 .price(1000)
                 .stock(100)
                 .startTime(LocalDateTime.now())
-                .endTime(LocalDateTime.of(2023, 3, 30, 0, 0))
+                .endTime(LocalDateTime.of(2024, 3, 30, 0, 0))
                 .build();
 
         itemRepository.save(item);
@@ -67,18 +79,16 @@ public class OrderServiceTest {
 
     @AfterEach
     void after() {
-        orderRepository.deleteAll();
-        itemRepository.deleteAll();
-        memberRepository.deleteAll();
+
 
     }
 
     @Test
     @DisplayName("구매하기 Test")
-    void order() {
+    void order() throws InterruptedException {
         Member member = memberRepository.findByMemberId("memberId").orElseThrow(()-> new Exceptions(ErrorCode.NOT_FOUND_MEMBER));
-        orderService.buyItem(member, "product");
-
+//        orderService.buyItem(member, "product");
+        optimisticLockFacade.buyItem(member, "product");
         assertEquals(99, itemRepository.findByItemName("product").get().getStock());
     }
 
@@ -95,7 +105,12 @@ public class OrderServiceTest {
         // when
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(()->{
-                orderService.buyItem(member, "product");
+                try {
+                    optimisticLockFacade.buyItem(member, "product");
+//                    orderService.buyItem(member, "product");
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 latch.countDown();
             });
         }
